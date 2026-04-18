@@ -155,11 +155,8 @@ public class MapTileManager : MonoBehaviour
 
         if (request.asset is Texture2D tex)
         {
-            mat.mainTexture = tex;
-            // Tile images store Y=0 at the top (north). Unity UVs store V=0 at the
-            // bottom, so we flip the texture vertically to keep north pointing up.
-            mat.mainTextureScale  = new Vector2( 1f, -1f);
-            mat.mainTextureOffset = new Vector2( 0f,  1f);
+            // Flip V so north stays at the top (tile images have Y=0 at top).
+            SetTexture(mat, tex, flipV: true);
         }
         else
         {
@@ -169,7 +166,7 @@ public class MapTileManager : MonoBehaviour
                 Debug.LogWarning($"[MapTileManager] Missing tile: Resources/{resourcePath}.png — using fallback.");
                 loggedMissing.Add(key);
             }
-            mat.mainTexture = fallbackTexture;
+            SetTexture(mat, fallbackTexture, flipV: false);
         }
 
         renderer.material = mat;
@@ -209,7 +206,8 @@ public class MapTileManager : MonoBehaviour
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows    = false;
 
-        var mat = new Material(baseMaterial) { mainTexture = fallbackTexture };
+        var mat = new Material(baseMaterial);
+        SetTexture(mat, fallbackTexture, flipV: false);
         renderer.material = mat;
 
         return go;
@@ -218,6 +216,29 @@ public class MapTileManager : MonoBehaviour
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    // Sets a texture on a material, choosing the correct property name for the
+    // active render pipeline (URP uses _BaseMap; Built-in uses _MainTex).
+    private static void SetTexture(Material mat, Texture2D tex, bool flipV)
+    {
+        Vector2 scale  = flipV ? new Vector2(1f, -1f) : Vector2.one;
+        Vector2 offset = flipV ? new Vector2(0f,  1f) : Vector2.zero;
+
+        if (mat.HasProperty("_BaseMap"))
+        {
+            // URP / Universal Render Pipeline
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetTextureScale ("_BaseMap", scale);
+            mat.SetTextureOffset("_BaseMap", offset);
+        }
+        else
+        {
+            // Built-in pipeline
+            mat.mainTexture       = tex;
+            mat.mainTextureScale  = scale;
+            mat.mainTextureOffset = offset;
+        }
+    }
 
     // Returns the best available unlit texture shader (URP or Built-in).
     private static Shader FindUnlitShader()
