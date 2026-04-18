@@ -16,6 +16,10 @@ public class LocationManager : MonoBehaviour
     [Tooltip("Seconds to wait for LocationService to initialise before giving up.")]
     [SerializeField] private float initTimeoutSeconds = 20f;
 
+    [Header("Editor Testing (ignored on device)")]
+    [SerializeField] private double editorLatitude  = 48.137_154; // Munich Marienplatz
+    [SerializeField] private double editorLongitude = 11.576_124;
+
     public double CurrentLatitude  { get; private set; }
     public double CurrentLongitude { get; private set; }
     public bool   IsReady          { get; private set; }
@@ -31,8 +35,12 @@ public class LocationManager : MonoBehaviour
         // dialog (handled by Unity). On iOS the NSLocationWhenInUseUsageDescription in
         // Info.plist drives the system prompt — no extra code required here.
 #if UNITY_EDITOR
-        // Editor: skip permission flow; use the last-known location set in Unity's Fake GPS.
-        Debug.Log("[LocationManager] Running in Editor — skipping permission check.");
+        // Input.location doesn't work in the Editor — use hardcoded test coordinates instead.
+        CurrentLatitude  = editorLatitude;
+        CurrentLongitude = editorLongitude;
+        IsReady = true;
+        Debug.Log($"[LocationManager] Editor mode — fake GPS: {editorLatitude}, {editorLongitude}");
+        yield break;
 #elif UNITY_ANDROID
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(
                 UnityEngine.Android.Permission.FineLocation))
