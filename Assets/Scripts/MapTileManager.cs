@@ -48,12 +48,22 @@ public class MapTileManager : MonoBehaviour
 
         if (gameManager == null)
         {
-            Debug.LogError("[MapTileManager] GameManager not found.");
+            Debug.LogError("[MapTileManager] GameManager not found — tiles will not load.");
             return;
         }
 
-        baseMaterial    = new Material(FindUnlitShader());
+        var shader = FindUnlitShader();
+        Debug.Log($"[MapTileManager] Using shader: {(shader != null ? shader.name : "NULL — tiles invisible!")}");
+
+        baseMaterial    = new Material(shader);
         fallbackTexture = CreateFallbackTexture();
+
+        // Spawn a white cube at world origin so you can verify the camera sees (0,0,0).
+        var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marker.name = "DEBUG_Origin";
+        marker.transform.position   = Vector3.zero;
+        marker.transform.localScale = Vector3.one * 50f;
+        Debug.Log("[MapTileManager] Placed DEBUG_Origin cube at (0,0,0) — should be visible if camera is aimed correctly.");
     }
 
     private void Update()
@@ -68,6 +78,7 @@ public class MapTileManager : MonoBehaviour
         if (centerTile == lastCenterTile) return;
 
         lastCenterTile = centerTile;
+        Debug.Log($"[MapTileManager] Refreshing grid — centre tile: {centerTile.x},{centerTile.y} | player: {gameManager.PlayerLatitude:F5},{gameManager.PlayerLongitude:F5}");
         RefreshGrid(centerTile);
     }
 
@@ -127,13 +138,13 @@ public class MapTileManager : MonoBehaviour
         float width  = TileUtils.TileWidthMetres(centerLat, zoomLevel);
         float height = TileUtils.TileHeightMetres(tileY,    zoomLevel);
 
-        // Y = -0.01 so tiles sit just below POIs (which are at Y ≥ 0).
-        go.transform.position   = new Vector3(offset.x, -0.01f, offset.z);
-        // Rotate the Quad (default XY plane) to lie flat on XZ.
+        var pos = new Vector3(offset.x, -0.01f, offset.z);
+        go.transform.position   = pos;
         go.transform.rotation   = Quaternion.Euler(-90f, 0f, 0f);
-        // Scale width (local X) and depth (local Y, which maps to world Z after rotation).
         go.transform.localScale = new Vector3(width, height, 1f);
         go.SetActive(true);
+
+        Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} → world pos {pos} size {width:F0}×{height:F0} m");
     }
 
     // -------------------------------------------------------------------------
@@ -155,7 +166,7 @@ public class MapTileManager : MonoBehaviour
 
         if (request.asset is Texture2D tex)
         {
-            // Flip V so north stays at the top (tile images have Y=0 at top).
+            Debug.Log($"[MapTileManager] Texture loaded OK: {resourcePath} ({tex.width}×{tex.height})");
             SetTexture(mat, tex, flipV: true);
         }
         else
