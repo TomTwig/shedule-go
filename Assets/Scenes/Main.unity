@@ -153,7 +153,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -723, y: 466}
+  m_AnchoredPosition: {x: -729, y: 466}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &498809878
@@ -379,9 +379,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eeb15a8d9bc6c4349b3d5fb3c2611d1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  poiLatitude: 54.345
+  poiLatitude: 54.34475
   poiLongitude: 10.132141
   yOffset: 0.5
+  displayScale: 50
   showDistanceLog: 1
 --- !u!135 &527244489
 SphereCollider:
@@ -427,7 +428,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: d3b899a05dc49e644a63cc4f91167e86, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -555,8 +556,8 @@ MonoBehaviour:
   desiredAccuracyMetres: 10
   updateDistanceMetres: 1
   initTimeoutSeconds: 20
-  editorLatitude: 54.3438
-  editorLongitude: 10.1321
+  editorLatitude: 54.34375
+  editorLongitude: 10.132141
 --- !u!4 &970142475
 Transform:
   m_ObjectHideFlags: 0
@@ -842,7 +843,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -522, y: 403}
+  m_AnchoredPosition: {x: -729, y: 393}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1472285809
@@ -1149,7 +1150,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -315, y: 343}
+  m_AnchoredPosition: {x: -729, y: 161}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1918248088
