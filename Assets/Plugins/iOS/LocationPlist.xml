@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  These keys must be present in the Xcode project's Info.plist for iOS to
+  allow location access. Add them via:
+    Unity → Build Settings → Player Settings → iOS → Other Settings
+      → "Location Usage Description" fields
+
+  OR add them manually to the generated Xcode project's Info.plist after building.
+
+  This file is a reference — Unity does NOT auto-merge plists from Plugins/iOS.
+  See the README for the PostProcessBuild script approach if you want automation.
+-->
+<plist version="1.0">
+<dict>
+    <!-- Required for "When In Use" location authorisation (iOS 11+). -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app uses your GPS location to show nearby points of interest.</string>
+
+    <!-- Required if you ever need background location updates (not used in MVP). -->
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>This app uses your GPS location in the background to track nearby points of interest.</string>
+</dict>
+</plist>
