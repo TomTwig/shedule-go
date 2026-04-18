@@ -167,24 +167,25 @@ public class MapTileManager : MonoBehaviour
         var    tex          = Resources.Load<Texture2D>(resourcePath);
 
         var renderer = go.GetComponent<MeshRenderer>();
-        var mat      = new Material(baseMaterial);
-
-        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
-        if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
+        // renderer.material creates a new instance of the default material —
+        // no shader lookup, guaranteed to work with the active pipeline.
+        var mat = renderer.material;
 
         if (tex != null)
         {
-            SetTexture(mat, tex, flipV: true);
-            Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} textured ({tex.width}×{tex.height})");
+            // Try both property names — works for Built-in (Standard) and URP.
+            if (mat.HasProperty("_BaseMap"))  mat.SetTexture("_BaseMap",  tex);
+            if (mat.HasProperty("_MainTex"))  mat.SetTexture("_MainTex",  tex);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+            if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
+            Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} — texture applied, shader: {mat.shader.name}");
         }
         else
         {
-            SetTexture(mat, fallbackTexture, flipV: false);
+            mat.color = Color.grey;
             if (loggedMissing.Add((tileX, tileY)))
                 Debug.LogWarning($"[MapTileManager] Missing: Resources/{resourcePath}.png");
         }
-
-        renderer.material = mat;
     }
 
     // -------------------------------------------------------------------------
@@ -213,18 +214,7 @@ public class MapTileManager : MonoBehaviour
         var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
         go.name = "MapTile";
         go.transform.SetParent(transform);
-
-        // Tiles are purely visual — no physics needed.
         Destroy(go.GetComponent<MeshCollider>());
-
-        var renderer = go.GetComponent<MeshRenderer>();
-        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        renderer.receiveShadows    = false;
-
-        var mat = new Material(baseMaterial);
-        SetTexture(mat, fallbackTexture, flipV: false);
-        renderer.material = mat;
-
         return go;
     }
 
