@@ -154,19 +154,25 @@ public class MapTileManager : MonoBehaviour
     private IEnumerator LoadTileTexture(GameObject go, int tileX, int tileY)
     {
         string resourcePath = $"Tiles/{zoomLevel}/{tileX}/{tileY}";
-        var    request      = Resources.LoadAsync<Texture2D>(resourcePath);
+        Debug.Log($"[MapTileManager] Loading: Resources/{resourcePath}");
 
-        yield return request;
+        // Synchronous load — eliminates coroutine/timing issues during diagnosis.
+        var tex = Resources.Load<Texture2D>(resourcePath);
+        Debug.Log($"[MapTileManager] Load result for {resourcePath}: {(tex != null ? $"OK {tex.width}×{tex.height}" : "NULL")}");
 
-        // The tile may have been recycled while we were loading — abort if so.
-        if (go == null || !activeTiles.ContainsValue(go)) yield break;
+        yield return null; // one frame gap so the rest of the scene has settled
+
+        if (go == null)
+        {
+            Debug.LogWarning($"[MapTileManager] GameObject was destroyed before texture applied: {resourcePath}");
+            yield break;
+        }
 
         var renderer = go.GetComponent<MeshRenderer>();
         var mat      = new Material(baseMaterial);
 
-        if (request.asset is Texture2D tex)
+        if (tex != null)
         {
-            Debug.Log($"[MapTileManager] Texture loaded OK: {resourcePath} ({tex.width}×{tex.height})");
             SetTexture(mat, tex, flipV: true);
         }
         else
