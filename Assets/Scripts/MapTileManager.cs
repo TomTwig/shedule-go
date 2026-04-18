@@ -55,27 +55,35 @@ public class MapTileManager : MonoBehaviour
         fallbackTexture = CreateFallbackTexture();
 
         // ── VISIBILITY TEST ──────────────────────────────────────────────────
-        // Creates three large colored quads at fixed world positions.
-        // If ANY of these are visible → the tile system geometry works and
-        // only texture/material assignment needs fixing.
-        // If NONE are visible → the Quad rotation or camera setup is wrong.
-        SpawnTestQuad(new Vector3(   0, 0,    0), 400, Color.red,   "TEST_Red_Flat");
-        SpawnTestQuad(new Vector3( 400, 0,    0), 400, Color.green, "TEST_Green_Flat");
-        SpawnTestQuad(new Vector3(   0, 200,  0), 400, Color.blue,  "TEST_Blue_Vertical");
-        Debug.Log("[MapTileManager] Spawned 3 test quads — Red+Green flat on ground, Blue vertical.");
+        // Using flat Cubes (Y scale = 1) instead of Quads — Cubes confirmed visible.
+        SpawnTestCube(new Vector3(   0, 0,    0), 400, Color.red,   "TEST_Red_Flat");
+        SpawnTestCube(new Vector3( 500, 0,    0), 400, Color.green, "TEST_Green_Flat");
+        SpawnTestCube(new Vector3(   0, 200,  0), 400, Color.blue,  "TEST_Blue_Vertical");
+        Debug.Log("[MapTileManager] Spawned 3 test cubes — Red+Green flat on ground, Blue vertical.");
         // ─────────────────────────────────────────────────────────────────────
 
-        // Spawn a white cube at world origin so you can verify the camera sees (0,0,0).
+        // Spawn a white cube at world origin.
         var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = "DEBUG_Origin";
         marker.transform.position   = Vector3.zero;
         marker.transform.localScale = Vector3.one * 50f;
-        Debug.Log("[MapTileManager] Placed DEBUG_Origin cube at (0,0,0) — should be visible if camera is aimed correctly.");
+        Debug.Log("[MapTileManager] Placed DEBUG_Origin cube at (0,0,0).");
     }
 
     private void Update()
     {
-        if (gameManager == null || !gameManager.IsLocationReady) return;
+        if (gameManager == null)
+        {
+            Debug.LogWarning("[MapTileManager] gameManager is null in Update!");
+            return;
+        }
+        if (!gameManager.IsLocationReady)
+        {
+            // Log once every ~5 seconds to avoid spam
+            if (Time.frameCount % 300 == 0)
+                Debug.Log($"[MapTileManager] Waiting for location... IsLocationReady={gameManager.IsLocationReady}");
+            return;
+        }
 
         (int x, int y) centerTile = TileUtils.LatLonToTile(
             gameManager.PlayerLatitude,
@@ -145,10 +153,10 @@ public class MapTileManager : MonoBehaviour
         float width  = TileUtils.TileWidthMetres(centerLat, zoomLevel);
         float height = TileUtils.TileHeightMetres(tileY,    zoomLevel);
 
-        var pos = new Vector3(offset.x, -0.01f, offset.z);
+        var pos = new Vector3(offset.x, -0.5f, offset.z); // Y=-0.5 so top face is at Y=0
         go.transform.position   = pos;
-        go.transform.rotation   = Quaternion.Euler(-90f, 0f, 0f);
-        go.transform.localScale = new Vector3(width, height, 1f);
+        go.transform.rotation   = Quaternion.identity;
+        go.transform.localScale = new Vector3(width, 1f, height);
         go.SetActive(true);
 
         Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} → world pos {pos} size {width:F0}×{height:F0} m");
@@ -209,10 +217,10 @@ public class MapTileManager : MonoBehaviour
 
     private GameObject CreateTileObject()
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = "MapTile";
         go.transform.SetParent(transform);
-        Destroy(go.GetComponent<MeshCollider>());
+        Destroy(go.GetComponent<BoxCollider>());
         return go;
     }
 
@@ -220,21 +228,19 @@ public class MapTileManager : MonoBehaviour
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static void SpawnTestQuad(Vector3 pos, float size, Color color, string name)
+    // Flat cube (Y=1) used for visibility testing — Quads don't render in this URP setup.
+    private static void SpawnTestCube(Vector3 pos, float size, Color color, string name)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = name;
-        Destroy(go.GetComponent<MeshCollider>());
+        Destroy(go.GetComponent<BoxCollider>());
 
-        // Flat on ground (same rotation as map tiles).
-        bool flat = name.Contains("Flat");
         go.transform.position   = pos;
-        go.transform.rotation   = flat ? Quaternion.Euler(-90, 0, 0) : Quaternion.identity;
-        go.transform.localScale = Vector3.one * size;
+        go.transform.localScale = new Vector3(size, 1f, size);
 
-        var r   = go.GetComponent<MeshRenderer>();
+        var r = go.GetComponent<MeshRenderer>();
         r.material.color = color;
-        Debug.Log($"[MapTileManager] {name} at {pos} rot={go.transform.rotation.eulerAngles} shader={r.material.shader.name}");
+        Debug.Log($"[MapTileManager] {name} at {pos} scale={go.transform.localScale} shader={r.material.shader.name}");
     }
 
     // Sets a texture on a material, choosing the correct property name for the
