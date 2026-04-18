@@ -52,20 +52,18 @@ public class MapTileManager : MonoBehaviour
             return;
         }
 
-        // Clone the material from a temporary Quad — this guarantees the material
-        // is correctly configured for whatever render pipeline is active in this project.
-        var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        baseMaterial = new Material(tempQuad.GetComponent<MeshRenderer>().sharedMaterial);
-        baseMaterial.name = "MapTileMaterial";
-        Destroy(tempQuad);
-
-        // Ensure fully opaque rendering.
-        if (baseMaterial.HasProperty("_Surface"))   baseMaterial.SetFloat("_Surface", 0f);
-        if (baseMaterial.HasProperty("_BaseColor"))  baseMaterial.SetColor("_BaseColor", Color.white);
-        if (baseMaterial.HasProperty("_Color"))      baseMaterial.SetColor("_Color",     Color.white);
-
-        Debug.Log($"[MapTileManager] Base material shader: {baseMaterial.shader.name}");
         fallbackTexture = CreateFallbackTexture();
+
+        // ── VISIBILITY TEST ──────────────────────────────────────────────────
+        // Creates three large colored quads at fixed world positions.
+        // If ANY of these are visible → the tile system geometry works and
+        // only texture/material assignment needs fixing.
+        // If NONE are visible → the Quad rotation or camera setup is wrong.
+        SpawnTestQuad(new Vector3(   0, 0,    0), 400, Color.red,   "TEST_Red_Flat");
+        SpawnTestQuad(new Vector3( 400, 0,    0), 400, Color.green, "TEST_Green_Flat");
+        SpawnTestQuad(new Vector3(   0, 200,  0), 400, Color.blue,  "TEST_Blue_Vertical");
+        Debug.Log("[MapTileManager] Spawned 3 test quads — Red+Green flat on ground, Blue vertical.");
+        // ─────────────────────────────────────────────────────────────────────
 
         // Spawn a white cube at world origin so you can verify the camera sees (0,0,0).
         var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -221,6 +219,23 @@ public class MapTileManager : MonoBehaviour
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private static void SpawnTestQuad(Vector3 pos, float size, Color color, string name)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        go.name = name;
+        Destroy(go.GetComponent<MeshCollider>());
+
+        // Flat on ground (same rotation as map tiles).
+        bool flat = name.Contains("Flat");
+        go.transform.position   = pos;
+        go.transform.rotation   = flat ? Quaternion.Euler(-90, 0, 0) : Quaternion.identity;
+        go.transform.localScale = Vector3.one * size;
+
+        var r   = go.GetComponent<MeshRenderer>();
+        r.material.color = color;
+        Debug.Log($"[MapTileManager] {name} at {pos} rot={go.transform.rotation.eulerAngles} shader={r.material.shader.name}");
+    }
 
     // Sets a texture on a material, choosing the correct property name for the
     // active render pipeline (URP uses _BaseMap; Built-in uses _MainTex).
