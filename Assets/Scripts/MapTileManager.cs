@@ -163,39 +163,29 @@ public class MapTileManager : MonoBehaviour
     private IEnumerator LoadTileTexture(GameObject go, int tileX, int tileY)
     {
         string resourcePath = $"Tiles/{zoomLevel}/{tileX}/{tileY}";
-        Debug.Log($"[MapTileManager] Loading: Resources/{resourcePath}");
-
-        // Synchronous load — eliminates coroutine/timing issues during diagnosis.
         var tex = Resources.Load<Texture2D>(resourcePath);
-        Debug.Log($"[MapTileManager] Load result for {resourcePath}: {(tex != null ? $"OK {tex.width}×{tex.height}" : "NULL")}");
+        Debug.Log($"[MapTileManager] Loaded {tileX}/{tileY}: {(tex != null ? "OK" : "NULL")}");
 
-        yield return null; // one frame gap so the rest of the scene has settled
+        yield return null;
 
-        if (go == null)
-        {
-            Debug.LogWarning($"[MapTileManager] GameObject was destroyed before texture applied: {resourcePath}");
-            yield break;
-        }
+        Debug.Log($"[MapTileManager] After yield — applying to {tileX}/{tileY}, go={go != null}");
+        if (go == null) yield break;
 
         var renderer = go.GetComponent<MeshRenderer>();
-        var mat      = new Material(baseMaterial);
+        if (renderer == null) { Debug.LogError($"[MapTileManager] No MeshRenderer on tile {tileX}/{tileY}!"); yield break; }
+
+        // Debug: force solid red to confirm geometry is visible, ignoring texture issues.
+        var mat = new Material(baseMaterial);
+        mat.color = Color.red;
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.red);
 
         if (tex != null)
-        {
-            SetTexture(mat, tex, flipV: true);
-        }
-        else
-        {
-            var key = (tileX, tileY);
-            if (!loggedMissing.Contains(key))
-            {
-                Debug.LogWarning($"[MapTileManager] Missing tile: Resources/{resourcePath}.png — using fallback.");
-                loggedMissing.Add(key);
-            }
-            SetTexture(mat, fallbackTexture, flipV: false);
-        }
+            SetTexture(mat, tex, flipV: false); // flipV disabled for diagnosis
 
+        renderer.enabled  = false;
         renderer.material = mat;
+        renderer.enabled  = true;
+        Debug.Log($"[MapTileManager] Material assigned to {tileX}/{tileY}, renderer.enabled={renderer.enabled}, shader={mat.shader.name}");
     }
 
     // -------------------------------------------------------------------------
