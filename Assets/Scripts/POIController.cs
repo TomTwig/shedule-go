@@ -13,7 +13,10 @@ public class POIController : MonoBehaviour
 
     [Header("Visual")]
     [Tooltip("Y offset so the POI sits on top of the ground plane.")]
-    [SerializeField] private float yOffset = 0.5f;
+    [SerializeField] private float yOffset = 30f;
+
+    [Tooltip("Scale applied to this transform on Start so it's visible from the top-down camera.")]
+    [SerializeField] private float displayScale = 50f;
 
     [Header("Debug")]
     [SerializeField] private bool showDistanceLog = true;
@@ -26,6 +29,8 @@ public class POIController : MonoBehaviour
 
         if (gameManager == null)
             Debug.LogError("[POIController] GameManager.Instance is null. Add a GameManager to the scene.");
+
+        transform.localScale = Vector3.one * displayScale;
     }
 
     private void Update()

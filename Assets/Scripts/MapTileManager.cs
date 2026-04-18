@@ -128,7 +128,7 @@ public class MapTileManager : MonoBehaviour
             var go = GetFromPool();
             activeTiles[tileKey] = go;
             PositionTile(go, tileKey.Item1, tileKey.Item2);
-            StartCoroutine(LoadTileTexture(go, tileKey.Item1, tileKey.Item2));
+            ApplyTileTexture(go, tileKey.Item1, tileKey.Item2);
         }
     }
 
@@ -160,32 +160,31 @@ public class MapTileManager : MonoBehaviour
     // Async texture loading from Resources
     // -------------------------------------------------------------------------
 
-    private IEnumerator LoadTileTexture(GameObject go, int tileX, int tileY)
+    // Synchronous — no coroutine, no yield, no timing issues.
+    private void ApplyTileTexture(GameObject go, int tileX, int tileY)
     {
         string resourcePath = $"Tiles/{zoomLevel}/{tileX}/{tileY}";
-        var tex = Resources.Load<Texture2D>(resourcePath);
-        Debug.Log($"[MapTileManager] Loaded {tileX}/{tileY}: {(tex != null ? "OK" : "NULL")}");
-
-        yield return null;
-
-        Debug.Log($"[MapTileManager] After yield — applying to {tileX}/{tileY}, go={go != null}");
-        if (go == null) yield break;
+        var    tex          = Resources.Load<Texture2D>(resourcePath);
 
         var renderer = go.GetComponent<MeshRenderer>();
-        if (renderer == null) { Debug.LogError($"[MapTileManager] No MeshRenderer on tile {tileX}/{tileY}!"); yield break; }
+        var mat      = new Material(baseMaterial);
 
-        // Debug: force solid red to confirm geometry is visible, ignoring texture issues.
-        var mat = new Material(baseMaterial);
-        mat.color = Color.red;
-        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.red);
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+        if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
 
         if (tex != null)
-            SetTexture(mat, tex, flipV: false); // flipV disabled for diagnosis
+        {
+            SetTexture(mat, tex, flipV: true);
+            Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} textured ({tex.width}×{tex.height})");
+        }
+        else
+        {
+            SetTexture(mat, fallbackTexture, flipV: false);
+            if (loggedMissing.Add((tileX, tileY)))
+                Debug.LogWarning($"[MapTileManager] Missing: Resources/{resourcePath}.png");
+        }
 
-        renderer.enabled  = false;
         renderer.material = mat;
-        renderer.enabled  = true;
-        Debug.Log($"[MapTileManager] Material assigned to {tileX}/{tileY}, renderer.enabled={renderer.enabled}, shader={mat.shader.name}");
     }
 
     // -------------------------------------------------------------------------
