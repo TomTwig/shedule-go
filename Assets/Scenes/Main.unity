@@ -379,7 +379,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eeb15a8d9bc6c4349b3d5fb3c2611d1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  poiLatitude: 54.34475
+  poiLatitude: 54.3451
   poiLongitude: 10.132141
   yOffset: 0.5
   displayScale: 50
