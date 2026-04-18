@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,16 +28,20 @@ public class MapTileManager : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GameManager gameManager;
 
-    // Key = (tileX, tileY), value = the GameObject displaying that tile.
-    private readonly Dictionary<(int, int), GameObject> activeTiles   = new();
-    private readonly Queue<GameObject>                  tilePool       = new();
-    private readonly List<(int, int)>                   keysToRemove   = new();
-    private readonly HashSet<(int, int)>                loggedMissing  = new(); // suppress repeat warnings
+    private readonly Dictionary<(int, int), GameObject> activeTiles  = new();
+    private readonly Queue<GameObject>                  tilePool      = new();
+    private readonly List<(int, int)>                   keysToRemove  = new();
+    private readonly HashSet<(int, int)>                loggedMissing = new();
 
     private (int x, int y) lastCenterTile = (-1, -1);
 
-    // Shared base material — each tile gets its own instance via new Material(base).
-    private Material baseMaterial;
+    // Shared flat mesh — all tile GameObjects use the same mesh geometry.
+    // Normals point up (+Y) so the camera looking down always sees the front face.
+    private static Mesh s_tileMesh;
+
+    // Material prototype cloned from Unity's default primitive material.
+    // Each tile gets its own instance (renderer.material) so textures don't bleed.
+    private Material materialTemplate;
     private Texture2D fallbackTexture;
 
     private void Start()
@@ -53,22 +56,17 @@ public class MapTileManager : MonoBehaviour
         }
 
         fallbackTexture = CreateFallbackTexture();
+
+        // Grab the default URP/Standard material from a temp primitive so we
+        // never have to hardcode a shader name.
+        var tempCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        materialTemplate = new Material(tempCube.GetComponent<MeshRenderer>().sharedMaterial);
+        Destroy(tempCube);
     }
 
     private void Update()
     {
-        if (gameManager == null)
-        {
-            Debug.LogWarning("[MapTileManager] gameManager is null in Update!");
-            return;
-        }
-        if (!gameManager.IsLocationReady)
-        {
-            // Log once every ~5 seconds to avoid spam
-            if (Time.frameCount % 300 == 0)
-                Debug.Log($"[MapTileManager] Waiting for location... IsLocationReady={gameManager.IsLocationReady}");
-            return;
-        }
+        if (gameManager == null || !gameManager.IsLocationReady) return;
 
         (int x, int y) centerTile = TileUtils.LatLonToTile(
             gameManager.PlayerLatitude,
@@ -78,7 +76,6 @@ public class MapTileManager : MonoBehaviour
         if (centerTile == lastCenterTile) return;
 
         lastCenterTile = centerTile;
-        Debug.Log($"[MapTileManager] Refreshing grid — centre tile: {centerTile.x},{centerTile.y} | player: {gameManager.PlayerLatitude:F5},{gameManager.PlayerLongitude:F5}");
         RefreshGrid(centerTile);
     }
 
@@ -88,13 +85,11 @@ public class MapTileManager : MonoBehaviour
 
     private void RefreshGrid((int cx, int cy) center)
     {
-        // Build the set of tiles we want this frame.
         var needed = new HashSet<(int, int)>();
         for (int dx = -gridRadius; dx <= gridRadius; dx++)
         for (int dy = -gridRadius; dy <= gridRadius; dy++)
             needed.Add((center.cx + dx, center.cy + dy));
 
-        // Return tiles that fell outside the grid back to the pool.
         keysToRemove.Clear();
         foreach (var key in activeTiles.Keys)
         {
@@ -106,12 +101,10 @@ public class MapTileManager : MonoBehaviour
         }
         foreach (var key in keysToRemove) activeTiles.Remove(key);
 
-        // Create or reuse a tile object for every needed position.
         foreach (var tileKey in needed)
         {
             if (activeTiles.TryGetValue(tileKey, out var existing))
             {
-                // Already active — just keep its world position current.
                 PositionTile(existing, tileKey.Item1, tileKey.Item2);
                 continue;
             }
@@ -136,39 +129,35 @@ public class MapTileManager : MonoBehaviour
             centerLat, centerLon);
 
         float width  = TileUtils.TileWidthMetres(centerLat, zoomLevel);
-        float height = TileUtils.TileHeightMetres(tileY,    zoomLevel);
+        float height = TileUtils.TileHeightMetres(tileY, zoomLevel);
 
-        var pos = new Vector3(offset.x, -0.5f, offset.z); // Y=-0.5 so top face is at Y=0
-        go.transform.position   = pos;
+        // Flat mesh sits in the XZ plane at Y=0.
+        go.transform.position   = new Vector3(offset.x, 0f, offset.z);
         go.transform.rotation   = Quaternion.identity;
         go.transform.localScale = new Vector3(width, 1f, height);
         go.SetActive(true);
-
-        Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} → world pos {pos} size {width:F0}×{height:F0} m");
     }
 
     // -------------------------------------------------------------------------
-    // Async texture loading from Resources
+    // Texture loading from Resources
     // -------------------------------------------------------------------------
 
-    // Synchronous — no coroutine, no yield, no timing issues.
     private void ApplyTileTexture(GameObject go, int tileX, int tileY)
     {
         string resourcePath = $"Tiles/{zoomLevel}/{tileX}/{tileY}";
         var    tex          = Resources.Load<Texture2D>(resourcePath);
 
-        var renderer = go.GetComponent<MeshRenderer>();
-        // renderer.material creates a new instance of the default material —
-        // no shader lookup, guaranteed to work with the active pipeline.
-        var mat = renderer.material;
+        // renderer.material auto-instances so each tile has its own material.
+        var mat = go.GetComponent<MeshRenderer>().material;
+
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+        if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
 
         if (tex != null)
         {
-            // Unity Cube top-face has V=0 at South, V=1 at North.
-            // OSM tiles have V=0 at North (top of image) → must flip V.
-            SetTexture(mat, tex, flipV: true);
-            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
-            if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
+            // Custom mesh UVs already match OSM orientation — no transform needed.
+            if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", tex);
+            mat.mainTexture = tex;
         }
         else
         {
@@ -201,81 +190,70 @@ public class MapTileManager : MonoBehaviour
 
     private GameObject CreateTileObject()
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = "MapTile";
+        var go = new GameObject("MapTile");
         go.transform.SetParent(transform);
-        Destroy(go.GetComponent<BoxCollider>());
+
+        go.AddComponent<MeshFilter>().sharedMesh = GetTileMesh();
+
+        var mr = go.AddComponent<MeshRenderer>();
+        mr.sharedMaterial = materialTemplate;
+
         return go;
+    }
+
+    // -------------------------------------------------------------------------
+    // Flat tile mesh — explicit UV mapping, no Quad/Cube UV ambiguity
+    // -------------------------------------------------------------------------
+
+    // Flat mesh in the XZ plane. Scale on the GameObject sets real-world metres.
+    //
+    //   World +X = East   World +Z = North   (camera looks down from +Y)
+    //
+    //   NW(-0.5, 0, +0.5) ------ NE(+0.5, 0, +0.5)
+    //        UV(0,0)                  UV(1,0)
+    //            |                        |
+    //   SW(-0.5, 0, -0.5) ------ SE(+0.5, 0, -0.5)
+    //        UV(0,1)                  UV(1,1)
+    //
+    // OSM tile UV convention: (0,0)=NW corner, U increases East, V increases South.
+    // This mesh matches that exactly — no flip or rotation needed in the shader.
+    private static Mesh GetTileMesh()
+    {
+        if (s_tileMesh != null) return s_tileMesh;
+
+        s_tileMesh = new Mesh { name = "FlatTile" };
+
+        s_tileMesh.vertices = new Vector3[]
+        {
+            new(-0.5f, 0f,  0.5f),  // 0: NW
+            new( 0.5f, 0f,  0.5f),  // 1: NE
+            new(-0.5f, 0f, -0.5f),  // 2: SW
+            new( 0.5f, 0f, -0.5f),  // 3: SE
+        };
+
+        s_tileMesh.uv = new Vector2[]
+        {
+            new(0f, 0f),  // NW → OSM top-left
+            new(1f, 0f),  // NE → OSM top-right
+            new(0f, 1f),  // SW → OSM bottom-left
+            new(1f, 1f),  // SE → OSM bottom-right
+        };
+
+        // CCW winding when viewed from above (+Y) → normals point up.
+        s_tileMesh.triangles = new int[] { 0, 1, 2, 1, 3, 2 };
+        s_tileMesh.RecalculateNormals();
+        s_tileMesh.RecalculateBounds();
+        return s_tileMesh;
     }
 
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
-    // Flat cube (Y=1) used for visibility testing — Quads don't render in this URP setup.
-    private static void SpawnTestCube(Vector3 pos, float size, Color color, string name)
-    {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = name;
-        Destroy(go.GetComponent<BoxCollider>());
-
-        go.transform.position   = pos;
-        go.transform.localScale = new Vector3(size, 1f, size);
-
-        var r = go.GetComponent<MeshRenderer>();
-        r.material.color = color;
-        Debug.Log($"[MapTileManager] {name} at {pos} scale={go.transform.localScale} shader={r.material.shader.name}");
-    }
-
-    // Sets a texture on a material, choosing the correct property name for the
-    // active render pipeline (URP uses _BaseMap; Built-in uses _MainTex).
-    private static void SetTexture(Material mat, Texture2D tex, bool flipV)
-    {
-        Vector2 scale  = flipV ? new Vector2(1f, -1f) : Vector2.one;
-        Vector2 offset = flipV ? new Vector2(0f,  1f) : Vector2.zero;
-
-        if (mat.HasProperty("_BaseMap"))
-        {
-            // URP / Universal Render Pipeline
-            mat.SetTexture("_BaseMap", tex);
-            mat.SetTextureScale ("_BaseMap", scale);
-            mat.SetTextureOffset("_BaseMap", offset);
-        }
-        else
-        {
-            // Built-in pipeline
-            mat.mainTexture       = tex;
-            mat.mainTextureScale  = scale;
-            mat.mainTextureOffset = offset;
-        }
-    }
-
-    // Returns the best available unlit texture shader (URP or Built-in).
-    private static Shader FindUnlitShader()
-    {
-        // URP projects use a different shader path than the Built-in pipeline.
-        string[] candidates =
-        {
-            "Universal Render Pipeline/Unlit",  // URP
-            "Unlit/Texture",                    // Built-in
-            "Sprites/Default",                  // fallback that works everywhere
-        };
-
-        foreach (var name in candidates)
-        {
-            var s = Shader.Find(name);
-            if (s != null) return s;
-        }
-
-        Debug.LogError("[MapTileManager] No unlit shader found — tiles will be invisible.");
-        return null;
-    }
-
-    // 2×2 light-grey texture shown while a real tile is loading or missing.
     private static Texture2D CreateFallbackTexture()
     {
-        var tex   = new Texture2D(2, 2);
-        var grey  = new Color(0.78f, 0.78f, 0.78f);
+        var tex  = new Texture2D(2, 2);
+        var grey = new Color(0.78f, 0.78f, 0.78f);
         tex.SetPixels(new[] { grey, grey, grey, grey });
         tex.Apply();
         return tex;
@@ -283,7 +261,8 @@ public class MapTileManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (baseMaterial    != null) Destroy(baseMaterial);
-        if (fallbackTexture != null) Destroy(fallbackTexture);
+        if (materialTemplate != null) Destroy(materialTemplate);
+        if (fallbackTexture  != null) Destroy(fallbackTexture);
+        if (s_tileMesh       != null) { Destroy(s_tileMesh); s_tileMesh = null; }
     }
 }
