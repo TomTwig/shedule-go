@@ -53,21 +53,6 @@ public class MapTileManager : MonoBehaviour
         }
 
         fallbackTexture = CreateFallbackTexture();
-
-        // ── VISIBILITY TEST ──────────────────────────────────────────────────
-        // Using flat Cubes (Y scale = 1) instead of Quads — Cubes confirmed visible.
-        SpawnTestCube(new Vector3(   0, 0,    0), 400, Color.red,   "TEST_Red_Flat");
-        SpawnTestCube(new Vector3( 500, 0,    0), 400, Color.green, "TEST_Green_Flat");
-        SpawnTestCube(new Vector3(   0, 200,  0), 400, Color.blue,  "TEST_Blue_Vertical");
-        Debug.Log("[MapTileManager] Spawned 3 test cubes — Red+Green flat on ground, Blue vertical.");
-        // ─────────────────────────────────────────────────────────────────────
-
-        // Spawn a white cube at world origin.
-        var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        marker.name = "DEBUG_Origin";
-        marker.transform.position   = Vector3.zero;
-        marker.transform.localScale = Vector3.one * 50f;
-        Debug.Log("[MapTileManager] Placed DEBUG_Origin cube at (0,0,0).");
     }
 
     private void Update()
@@ -179,12 +164,11 @@ public class MapTileManager : MonoBehaviour
 
         if (tex != null)
         {
-            // Try both property names — works for Built-in (Standard) and URP.
-            if (mat.HasProperty("_BaseMap"))  mat.SetTexture("_BaseMap",  tex);
-            if (mat.HasProperty("_MainTex"))  mat.SetTexture("_MainTex",  tex);
+            // Unity Cube top-face has V=0 at South, V=1 at North.
+            // OSM tiles have V=0 at North (top of image) → must flip V.
+            SetTexture(mat, tex, flipV: true);
             if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
             if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     Color.white);
-            Debug.Log($"[MapTileManager] Tile {tileX}/{tileY} — texture applied, shader: {mat.shader.name}");
         }
         else
         {
