@@ -155,9 +155,10 @@ public class MapTileManager : MonoBehaviour
 
         if (tex != null)
         {
-            // Custom mesh UVs already match OSM orientation — no transform needed.
-            if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", tex);
-            mat.mainTexture = tex;
+            // Unity imports PNGs with Y=0 at the bottom (OpenGL convention).
+            // OSM image row 0 (top/North) lands at UV.v=1, not v=0.
+            // Mesh UV has v=0 at North → must flip V so North samples v=1 in texture.
+            SetTexture(mat, tex, flipV: true);
         }
         else
         {
@@ -249,6 +250,27 @@ public class MapTileManager : MonoBehaviour
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    // V-flip corrects Unity's OpenGL texture convention (Y=0 at bottom) vs
+    // OSM PNG convention (row 0 = North = should map to UV.v=1, not v=0).
+    private static void SetTexture(Material mat, Texture2D tex, bool flipV)
+    {
+        Vector2 scale  = flipV ? new Vector2(1f, -1f) : Vector2.one;
+        Vector2 offset = flipV ? new Vector2(0f,  1f) : Vector2.zero;
+
+        if (mat.HasProperty("_BaseMap"))
+        {
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetTextureScale ("_BaseMap", scale);
+            mat.SetTextureOffset("_BaseMap", offset);
+        }
+        else
+        {
+            mat.mainTexture       = tex;
+            mat.mainTextureScale  = scale;
+            mat.mainTextureOffset = offset;
+        }
+    }
 
     private static Texture2D CreateFallbackTexture()
     {
