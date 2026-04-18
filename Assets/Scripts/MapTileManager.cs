@@ -52,7 +52,7 @@ public class MapTileManager : MonoBehaviour
             return;
         }
 
-        baseMaterial    = new Material(Shader.Find("Unlit/Texture"));
+        baseMaterial    = new Material(FindUnlitShader());
         fallbackTexture = CreateFallbackTexture();
     }
 
@@ -218,6 +218,27 @@ public class MapTileManager : MonoBehaviour
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    // Returns the best available unlit texture shader (URP or Built-in).
+    private static Shader FindUnlitShader()
+    {
+        // URP projects use a different shader path than the Built-in pipeline.
+        string[] candidates =
+        {
+            "Universal Render Pipeline/Unlit",  // URP
+            "Unlit/Texture",                    // Built-in
+            "Sprites/Default",                  // fallback that works everywhere
+        };
+
+        foreach (var name in candidates)
+        {
+            var s = Shader.Find(name);
+            if (s != null) return s;
+        }
+
+        Debug.LogError("[MapTileManager] No unlit shader found — tiles will be invisible.");
+        return null;
+    }
 
     // 2×2 light-grey texture shown while a real tile is loading or missing.
     private static Texture2D CreateFallbackTexture()
