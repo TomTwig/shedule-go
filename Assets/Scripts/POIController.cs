@@ -8,8 +8,8 @@ using UnityEngine;
 public class POIController : MonoBehaviour
 {
     [Header("POI GPS Coordinate (hardcoded for MVP)")]
-    [SerializeField] private double poiLatitude  = 54.261_000; // ~100 m north of editor start
-    [SerializeField] private double poiLongitude = 10.156_000;
+    [SerializeField] private double poiLatitude  = 54.345_000; // ~150 m north within Kiel tiles
+    [SerializeField] private double poiLongitude = 10.132_141;
 
     [Header("Visual")]
     [Tooltip("Y offset so the POI sits on top of the ground plane.")]

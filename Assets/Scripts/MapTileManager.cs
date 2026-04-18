@@ -30,9 +30,10 @@ public class MapTileManager : MonoBehaviour
     [SerializeField] private GameManager gameManager;
 
     // Key = (tileX, tileY), value = the GameObject displaying that tile.
-    private readonly Dictionary<(int, int), GameObject> activeTiles  = new();
-    private readonly Queue<GameObject>                  tilePool      = new();
-    private readonly List<(int, int)>                   keysToRemove  = new();
+    private readonly Dictionary<(int, int), GameObject> activeTiles   = new();
+    private readonly Queue<GameObject>                  tilePool       = new();
+    private readonly List<(int, int)>                   keysToRemove   = new();
+    private readonly HashSet<(int, int)>                loggedMissing  = new(); // suppress repeat warnings
 
     private (int x, int y) lastCenterTile = (-1, -1);
 
@@ -162,7 +163,12 @@ public class MapTileManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[MapTileManager] Missing tile: Resources/{resourcePath}.png — using fallback.");
+            var key = (tileX, tileY);
+            if (!loggedMissing.Contains(key))
+            {
+                Debug.LogWarning($"[MapTileManager] Missing tile: Resources/{resourcePath}.png — using fallback.");
+                loggedMissing.Add(key);
+            }
             mat.mainTexture = fallbackTexture;
         }
 
