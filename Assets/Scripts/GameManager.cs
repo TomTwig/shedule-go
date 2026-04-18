@@ -5,6 +5,7 @@ using UnityEngine;
 /// Reads the player's GPS position from LocationManager and broadcasts it to
 /// any IPlayerPositionListener in the scene (e.g. POIController, UIManager).
 /// </summary>
+[DefaultExecutionOrder(-10)] // Runs after LocationManager (-20), before POI/UI/Map (0)
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private LocationManager locationManager;

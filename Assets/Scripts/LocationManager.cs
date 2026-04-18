@@ -5,6 +5,7 @@ using UnityEngine;
 /// Owns the Unity LocationService lifecycle.
 /// Other systems read CurrentLatitude / CurrentLongitude; they never touch Input.location directly.
 /// </summary>
+[DefaultExecutionOrder(-20)] // Runs before GameManager (-10) and everything else (0)
 public class LocationManager : MonoBehaviour
 {
     [Tooltip("Desired accuracy in metres.")]
