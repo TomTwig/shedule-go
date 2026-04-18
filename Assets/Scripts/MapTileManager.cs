@@ -52,10 +52,19 @@ public class MapTileManager : MonoBehaviour
             return;
         }
 
-        var shader = FindUnlitShader();
-        Debug.Log($"[MapTileManager] Using shader: {(shader != null ? shader.name : "NULL — tiles invisible!")}");
+        // Clone the material from a temporary Quad — this guarantees the material
+        // is correctly configured for whatever render pipeline is active in this project.
+        var tempQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        baseMaterial = new Material(tempQuad.GetComponent<MeshRenderer>().sharedMaterial);
+        baseMaterial.name = "MapTileMaterial";
+        Destroy(tempQuad);
 
-        baseMaterial    = new Material(shader);
+        // Ensure fully opaque rendering.
+        if (baseMaterial.HasProperty("_Surface"))   baseMaterial.SetFloat("_Surface", 0f);
+        if (baseMaterial.HasProperty("_BaseColor"))  baseMaterial.SetColor("_BaseColor", Color.white);
+        if (baseMaterial.HasProperty("_Color"))      baseMaterial.SetColor("_Color",     Color.white);
+
+        Debug.Log($"[MapTileManager] Base material shader: {baseMaterial.shader.name}");
         fallbackTexture = CreateFallbackTexture();
 
         // Spawn a white cube at world origin so you can verify the camera sees (0,0,0).
