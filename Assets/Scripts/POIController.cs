@@ -30,7 +30,7 @@ public class POIController : MonoBehaviour
 
     private void Update()
     {
-        if (gameManager == null || !gameManager.GetComponent<LocationManager>()?.IsReady ?? true)
+        if (gameManager == null || !gameManager.IsLocationReady)
         {
             // Location not ready yet — keep POI at a visible test position.
             transform.position = new Vector3(5f, yOffset, 5f);

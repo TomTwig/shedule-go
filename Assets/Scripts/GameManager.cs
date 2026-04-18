@@ -10,8 +10,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private LocationManager locationManager;
 
     // Cached values — other scripts poll these instead of reading Input.location.
-    public double PlayerLatitude  { get; private set; }
-    public double PlayerLongitude { get; private set; }
+    public double PlayerLatitude   { get; private set; }
+    public double PlayerLongitude  { get; private set; }
+    public bool   IsLocationReady  => locationManager != null && locationManager.IsReady;
 
     // Singleton for convenient access; only one GameManager should exist.
     public static GameManager Instance { get; private set; }
