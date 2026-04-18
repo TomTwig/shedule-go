@@ -18,8 +18,8 @@ public class LocationManager : MonoBehaviour
     [SerializeField] private float initTimeoutSeconds = 20f;
 
     [Header("Editor Testing (ignored on device)")]
-    [SerializeField] private double editorLatitude  = 48.137_154; // Munich Marienplatz
-    [SerializeField] private double editorLongitude = 11.576_124;
+    [SerializeField] private double editorLatitude  = 54.260_000; // Kiel tile centre
+    [SerializeField] private double editorLongitude = 10.155_000;
 
     public double CurrentLatitude  { get; private set; }
     public double CurrentLongitude { get; private set; }
