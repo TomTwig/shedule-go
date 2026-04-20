@@ -1,30 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Custom AndroidManifest for the location-based game.
-  Unity merges this with its own generated manifest at build time.
--->
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yourcompany.shedule">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Coarse location: city-block accuracy (battery-friendly fallback). -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Fine location: GPS accuracy required for the game. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!--
-      Declare that GPS is required.
-      Set required="false" if you want the app installable on devices without GPS
-      (you would then degrade gracefully in code).
-    -->
     <uses-feature
         android:name="android.hardware.location.gps"
         android:required="true" />
-
-    <application>
-        <!-- Placeholder activity — Unity generates the real one; this just avoids
-             a "missing application element" parse error when Unity merges. -->
-    </application>
 
 </manifest>
