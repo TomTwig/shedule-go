@@ -22,8 +22,8 @@ public class MapTileManager : MonoBehaviour
     [Tooltip("OSM zoom level. 16 = street level (~600 m per tile).")]
     [SerializeField] private int zoomLevel = 16;
 
-    [Tooltip("Tiles to load in each direction from the player. 1 = 3×3 grid, 2 = 5×5 grid.")]
-    [SerializeField] [Range(1, 3)] private int gridRadius = 1;
+    [Tooltip("Tiles to load in each direction from the player. 1=3×3, 2=5×5, 5=11×11 (full set).")]
+    [SerializeField] [Range(1, 5)] private int gridRadius = 5;
 
     [Header("Dependencies")]
     [SerializeField] private GameManager gameManager;
