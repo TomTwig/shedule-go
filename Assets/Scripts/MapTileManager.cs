@@ -57,11 +57,9 @@ public class MapTileManager : MonoBehaviour
 
         fallbackTexture = CreateFallbackTexture();
 
-        // Grab the default URP/Standard material from a temp primitive so we
-        // never have to hardcode a shader name.
-        var tempCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        materialTemplate = new Material(tempCube.GetComponent<MeshRenderer>().sharedMaterial);
-        Destroy(tempCube);
+        var shader = Shader.Find("Universal Render Pipeline/Lit")
+                  ?? Shader.Find("Standard");
+        materialTemplate = new Material(shader);
     }
 
     private void Update()
@@ -73,10 +71,17 @@ public class MapTileManager : MonoBehaviour
             gameManager.PlayerLongitude,
             zoomLevel);
 
-        if (centerTile == lastCenterTile) return;
-
-        lastCenterTile = centerTile;
-        RefreshGrid(centerTile);
+        if (centerTile != lastCenterTile)
+        {
+            lastCenterTile = centerTile;
+            RefreshGrid(centerTile);
+        }
+        else
+        {
+            // Reposition every frame so sub-tile GPS movement keeps the map aligned.
+            foreach (var kv in activeTiles)
+                PositionTile(kv.Value, kv.Key.Item1, kv.Key.Item2);
+        }
     }
 
     // -------------------------------------------------------------------------
