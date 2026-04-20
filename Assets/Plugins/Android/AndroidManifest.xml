@@ -13,10 +13,11 @@
         <activity
             android:name="com.unity3d.player.UnityPlayerGameActivity"
             android:exported="true"
+            android:theme="@style/UnityThemeSelector"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
             android:hardwareAccelerated="false"
             android:launchMode="singleTask"
-            tools:replace="android:configChanges">
+            tools:replace="android:configChanges,android:theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
