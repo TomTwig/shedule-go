@@ -8,7 +8,7 @@ using UnityEngine;
 public class PlayerMarker : MonoBehaviour
 {
     [SerializeField] private float markerSize  = 30f;
-    [SerializeField] private Color markerColor = new Color(0.15f, 0.55f, 1f); // bright blue
+    [SerializeField] private Color markerColor = new Color(1f, 0.15f, 0.15f); // red
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoCreate()
