@@ -1,19 +1,60 @@
-# Unity generated
-Library/
-Temp/
-Obj/
-Build/
-Builds/
-Logs/
-UserSettings/
+# ============================================================
+# Unity generated — never commit these
+# ============================================================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]serSettings/
 MemoryCaptures/
+[Rr]ecordings/
 
+# Android NDK / Gradle intermediates Unity writes to .utmp/
+.utmp/
+ExportedProject/
+androidProject/
+
+# Build outputs
+[Bb]uild/
+[Bb]uilds/
+*.apk
+*.aab
+*.unitypackage
+*.unityproj
+
+# Crash / profiler artefacts
+sysroot/
+
+# ============================================================
+# Unity Assets — track everything under Assets/ EXCEPT:
+# ============================================================
+
+# res/ is obsolete in Unity 6 and should not be committed
+Assets/Plugins/Android/res/
+
+# Addressables / StreamingAssets build output (auto-generated)
+Assets/StreamingAssets/aa/
+Assets/AddressableAssetsData/
+
+# ============================================================
 # OS
+# ============================================================
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+Desktop.ini
 
-# IDE
+# ============================================================
+# IDE / editor
+# ============================================================
 .idea/
 .vscode/
+.fleet/
+*.suo
 *.sln
 *.csproj
+*.pidb
+*.pdb
+*.mdb
+nuget.config
