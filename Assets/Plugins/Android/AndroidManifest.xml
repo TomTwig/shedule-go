@@ -17,9 +17,10 @@
             android:exported="true"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
+            android:screenOrientation="portrait"
             android:hardwareAccelerated="false"
             android:launchMode="singleTask"
-            tools:replace="android:configChanges,android:theme"
+            tools:replace="android:configChanges,android:screenOrientation,android:theme"
             tools:node="merge">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
