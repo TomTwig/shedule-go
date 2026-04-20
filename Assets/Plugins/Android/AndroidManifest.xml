@@ -9,11 +9,13 @@
         android:name="android.hardware.location.gps"
         android:required="true" />
 
-    <application>
+    <application
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        tools:replace="android:theme">
         <activity
             android:name="com.unity3d.player.UnityPlayerGameActivity"
             android:exported="true"
-            android:theme="@style/SheduleGoTheme"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
             android:hardwareAccelerated="false"
             android:launchMode="singleTask"
