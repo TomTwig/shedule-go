@@ -9,7 +9,7 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private int   zoomLevel    = 16;
-    [SerializeField] private int   tilesVisible = 3;   // tiles along shorter axis
+    [SerializeField] private int   tilesVisible = 5;   // tiles along shorter axis (gridRadius*2+1)
     [SerializeField] private float referenceLat = 54.35f;
 
     private Camera cam;

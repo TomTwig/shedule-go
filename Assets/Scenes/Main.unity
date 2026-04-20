@@ -1114,7 +1114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zoomLevel: 16
-  gridRadius: 1
+  gridRadius: 2
   gameManager: {fileID: 1766516524}
 --- !u!1 &1918248086
 GameObject:
