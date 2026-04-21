@@ -18,8 +18,10 @@ public class LocationManager : MonoBehaviour
     [SerializeField] private float initTimeoutSeconds = 20f;
 
     [Header("Editor Testing (ignored on device)")]
-    [SerializeField] private double editorLatitude  = 54.343_750; // centre of downloaded Kiel tiles
+#if UNITY_EDITOR
+    [SerializeField] private double editorLatitude  = 54.343_750;
     [SerializeField] private double editorLongitude = 10.132_141;
+#endif
 
     public double CurrentLatitude  { get; private set; }
     public double CurrentLongitude { get; private set; }
