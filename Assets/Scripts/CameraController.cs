@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Keeps the main camera centered on the player (world origin) and adjusts
 /// orthographic size so the tile grid fills the screen in any orientation.
+/// Supports pinch-to-zoom within configurable limits.
 /// Auto-attaches to the Main Camera on startup.
 /// </summary>
 [RequireComponent(typeof(Camera))]
@@ -13,9 +14,19 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float referenceLat = 54.35f;
     [SerializeField] private float cameraHeight = 800f;
 
+    [Header("Pinch Zoom")]
+    [Tooltip("Closest the camera can zoom in (metres of half-height).")]
+    [SerializeField] private float minOrthoSize = 100f;
+    [Tooltip("Furthest the camera can zoom out (metres of half-height).")]
+    [SerializeField] private float maxOrthoSize = 900f;
+
     private Camera cam;
     private int    lastWidth;
     private int    lastHeight;
+    private float  currentOrthoSize = -1f; // -1 = use calculated default
+
+    private float  prevPinchDist;
+    private bool   isPinching;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoAttach()
@@ -39,26 +50,65 @@ public class CameraController : MonoBehaviour
         pos.y = cameraHeight;
         transform.position = pos;
 
-        // Resize to fit tiles on screen.
+        HandlePinchZoom();
+
+        // Recalculate default size only on first run or screen resize.
         int w = Screen.width;
         int h = Screen.height;
-        if (w == lastWidth && h == lastHeight) return;
-        lastWidth  = w;
-        lastHeight = h;
-        AdjustSize(w, h);
+        if (w != lastWidth || h != lastHeight)
+        {
+            lastWidth  = w;
+            lastHeight = h;
+            if (currentOrthoSize < 0f)
+                currentOrthoSize = CalculateDefaultSize(w, h);
+        }
+
+        if (currentOrthoSize > 0f)
+            cam.orthographicSize = currentOrthoSize;
     }
 
-    private void AdjustSize(int screenW, int screenH)
+    private void HandlePinchZoom()
+    {
+        if (Input.touchCount != 2)
+        {
+            isPinching = false;
+            return;
+        }
+
+        Touch t0 = Input.GetTouch(0);
+        Touch t1 = Input.GetTouch(1);
+
+        float dist = Vector2.Distance(t0.position, t1.position);
+
+        if (!isPinching || t0.phase == TouchPhase.Began || t1.phase == TouchPhase.Began)
+        {
+            prevPinchDist = dist;
+            isPinching    = true;
+            return;
+        }
+
+        float delta = prevPinchDist - dist;
+        prevPinchDist = dist;
+
+        // Scale delta by current ortho size so zoom feels consistent at all levels.
+        float sensitivity = currentOrthoSize / Screen.height;
+        currentOrthoSize  = Mathf.Clamp(
+            currentOrthoSize + delta * sensitivity * 2f,
+            minOrthoSize,
+            maxOrthoSize);
+    }
+
+    private float CalculateDefaultSize(int screenW, int screenH)
     {
         float tileW = TileUtils.TileWidthMetres(referenceLat, zoomLevel);
         float tileH = TileUtils.TileHeightMetres(
             TileUtils.LatLonToTile(referenceLat, 10.0, zoomLevel).y, zoomLevel);
 
-        float aspect    = (float)screenW / screenH;
-        float orthoSize = aspect < 1f
-            ? (tileW * tilesVisible / 2f) / aspect   // portrait: fit width
-            : tileH * tilesVisible / 2f;              // landscape: fit height
+        float aspect = (float)screenW / screenH;
+        float size   = aspect < 1f
+            ? (tileW * tilesVisible / 2f) / aspect
+            : tileH * tilesVisible / 2f;
 
-        cam.orthographicSize = Mathf.Clamp(orthoSize, 300f, 2000f);
+        return Mathf.Clamp(size, minOrthoSize, maxOrthoSize);
     }
 }
