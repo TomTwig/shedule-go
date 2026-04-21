@@ -521,7 +521,6 @@ MonoBehaviour:
   statusText: {fileID: 498809878}
   poiDistanceText: {fileID: 1918248088}
   gameManager: {fileID: 1766516524}
-  poiController: {fileID: 527244488}
   poiLatitude: 54.345
   poiLongitude: 10.132141
 --- !u!1 &970142473
@@ -591,7 +590,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1101557652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1054,6 +1053,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   locationManager: {fileID: 970142474}
+  smoothSpeed: 5
 --- !u!4 &1766516525
 Transform:
   m_ObjectHideFlags: 0
