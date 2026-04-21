@@ -34,9 +34,6 @@ public class LocationManager : MonoBehaviour
 
     private IEnumerator InitialiseLocation()
     {
-        // On Android the LocationService Start() call itself triggers the runtime permission
-        // dialog (handled by Unity). On iOS the NSLocationWhenInUseUsageDescription in
-        // Info.plist drives the system prompt — no extra code required here.
 #if UNITY_EDITOR
         // Input.location doesn't work in the Editor — use hardcoded test coordinates instead.
         CurrentLatitude  = editorLatitude;
@@ -44,14 +41,15 @@ public class LocationManager : MonoBehaviour
         IsReady = true;
         Debug.Log($"[LocationManager] Editor mode — fake GPS: {editorLatitude}, {editorLongitude}");
         yield break;
-#elif UNITY_ANDROID
+#else
+#if UNITY_ANDROID
+        // On Android, LocationService.Start() triggers the runtime permission dialog.
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(
                 UnityEngine.Android.Permission.FineLocation))
         {
             UnityEngine.Android.Permission.RequestUserPermission(
                 UnityEngine.Android.Permission.FineLocation);
 
-            // Wait a frame for the dialog to appear, then poll until the user responds.
             yield return null;
             float waited = 0f;
             while (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(
@@ -87,6 +85,7 @@ public class LocationManager : MonoBehaviour
 
         IsReady = true;
         Debug.Log("[LocationManager] LocationService running.");
+#endif
     }
 
     private void Update()
