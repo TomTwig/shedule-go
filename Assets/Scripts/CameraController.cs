@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.InputSystem.EnhancedTouch;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 /// <summary>
 /// Keeps the main camera centered on the player (world origin) and adjusts
@@ -23,10 +25,10 @@ public class CameraController : MonoBehaviour
     private Camera cam;
     private int    lastWidth;
     private int    lastHeight;
-    private float  currentOrthoSize = -1f; // -1 = use calculated default
+    private float  currentOrthoSize = -1f;
 
-    private float  prevPinchDist;
-    private bool   isPinching;
+    private float prevPinchDist;
+    private bool  isPinching;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoAttach()
@@ -41,6 +43,16 @@ public class CameraController : MonoBehaviour
         cam = GetComponent<Camera>();
     }
 
+    private void OnEnable()
+    {
+        EnhancedTouchSupport.Enable();
+    }
+
+    private void OnDisable()
+    {
+        EnhancedTouchSupport.Disable();
+    }
+
     private void LateUpdate()
     {
         // Player is always at world origin — keep camera directly above it.
@@ -52,7 +64,6 @@ public class CameraController : MonoBehaviour
 
         HandlePinchZoom();
 
-        // Recalculate default size only on first run or screen resize.
         int w = Screen.width;
         int h = Screen.height;
         if (w != lastWidth || h != lastHeight)
@@ -69,18 +80,19 @@ public class CameraController : MonoBehaviour
 
     private void HandlePinchZoom()
     {
-        if (Input.touchCount != 2)
+        var touches = Touch.activeTouches;
+
+        if (touches.Count != 2)
         {
             isPinching = false;
             return;
         }
 
-        Touch t0 = Input.GetTouch(0);
-        Touch t1 = Input.GetTouch(1);
+        float dist = Vector2.Distance(
+            touches[0].screenPosition,
+            touches[1].screenPosition);
 
-        float dist = Vector2.Distance(t0.position, t1.position);
-
-        if (!isPinching || t0.phase == TouchPhase.Began || t1.phase == TouchPhase.Began)
+        if (!isPinching)
         {
             prevPinchDist = dist;
             isPinching    = true;
@@ -90,7 +102,6 @@ public class CameraController : MonoBehaviour
         float delta = prevPinchDist - dist;
         prevPinchDist = dist;
 
-        // Scale delta by current ortho size so zoom feels consistent at all levels.
         float sensitivity = currentOrthoSize / Screen.height;
         currentOrthoSize  = Mathf.Clamp(
             currentOrthoSize + delta * sensitivity * 2f,
