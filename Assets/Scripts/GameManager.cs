@@ -11,9 +11,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private LocationManager locationManager;
 
     // Cached values — other scripts poll these instead of reading Input.location.
-    public double PlayerLatitude  { get; private set; }
-    public double PlayerLongitude { get; private set; }
+    public double PlayerLatitude   { get; private set; }
+    public double PlayerLongitude  { get; private set; }
+
+    // Smoothed values for visual rendering — interpolate toward actual GPS each frame.
+    public double SmoothedLatitude  { get; private set; }
+    public double SmoothedLongitude { get; private set; }
+
+    [SerializeField] private float smoothSpeed = 5f;
+
     public bool   IsLocationReady => locationManager != null && locationManager.IsReady;
+
+    private bool smoothedInitialized;
 
     // Singleton for convenient access; only one GameManager should exist.
     public static GameManager Instance { get; private set; }
@@ -50,5 +59,18 @@ public class GameManager : MonoBehaviour
 
         PlayerLatitude  = locationManager.CurrentLatitude;
         PlayerLongitude = locationManager.CurrentLongitude;
+
+        if (!smoothedInitialized)
+        {
+            SmoothedLatitude    = PlayerLatitude;
+            SmoothedLongitude   = PlayerLongitude;
+            smoothedInitialized = true;
+        }
+        else
+        {
+            float t = 1f - Mathf.Exp(-smoothSpeed * Time.deltaTime);
+            SmoothedLatitude  += (PlayerLatitude  - SmoothedLatitude)  * t;
+            SmoothedLongitude += (PlayerLongitude - SmoothedLongitude) * t;
+        }
     }
 }

@@ -76,12 +76,10 @@ public class MapTileManager : MonoBehaviour
             lastCenterTile = centerTile;
             RefreshGrid(centerTile);
         }
-        else
-        {
-            // Reposition every frame so sub-tile GPS movement keeps the map aligned.
-            foreach (var kv in activeTiles)
-                PositionTile(kv.Value, kv.Key.Item1, kv.Key.Item2);
-        }
+
+        // Reposition every frame using smoothed coordinates for fluid movement.
+        foreach (var kv in activeTiles)
+            PositionTile(kv.Value, kv.Key.Item1, kv.Key.Item2);
     }
 
     // -------------------------------------------------------------------------
@@ -130,7 +128,7 @@ public class MapTileManager : MonoBehaviour
         var (centerLat, centerLon) = TileUtils.TileCenterLatLon(tileX, tileY, zoomLevel);
 
         Vector3 offset = GeoUtils.GpsToUnityOffset(
-            gameManager.PlayerLatitude, gameManager.PlayerLongitude,
+            gameManager.SmoothedLatitude, gameManager.SmoothedLongitude,
             centerLat, centerLon);
 
         float width  = TileUtils.TileWidthMetres(centerLat, zoomLevel);
