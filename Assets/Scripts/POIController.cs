@@ -43,8 +43,8 @@ public class POIController : MonoBehaviour
         }
 
         Vector3 offset = GeoUtils.GpsToUnityOffset(
-            gameManager.PlayerLatitude,
-            gameManager.PlayerLongitude,
+            gameManager.SmoothedLatitude,
+            gameManager.SmoothedLongitude,
             poiLatitude,
             poiLongitude);
 

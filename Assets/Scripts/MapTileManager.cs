@@ -28,19 +28,17 @@ public class MapTileManager : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GameManager gameManager;
 
-    private readonly Dictionary<(int, int), GameObject> activeTiles  = new();
-    private readonly Queue<GameObject>                  tilePool      = new();
-    private readonly List<(int, int)>                   keysToRemove  = new();
-    private readonly HashSet<(int, int)>                loggedMissing = new();
+    private readonly Dictionary<(int, int), GameObject>              activeTiles  = new();
+    private readonly Queue<GameObject>                                tilePool     = new();
+    private readonly List<(int, int)>                                 keysToRemove = new();
+    private readonly HashSet<(int, int)>                              loggedMissing = new();
+    private readonly Dictionary<(int, int), Texture2D>               textureCache  = new();
+    private readonly Dictionary<(int, int), (double lat, double lon, float w, float h)> tileDataCache = new();
 
     private (int x, int y) lastCenterTile = (-1, -1);
 
-    // Shared flat mesh — all tile GameObjects use the same mesh geometry.
-    // Normals point up (+Y) so the camera looking down always sees the front face.
     private static Mesh s_tileMesh;
 
-    // Material prototype cloned from Unity's default primitive material.
-    // Each tile gets its own instance (renderer.material) so textures don't bleed.
     private Material materialTemplate;
     private Texture2D fallbackTexture;
 
@@ -59,6 +57,13 @@ public class MapTileManager : MonoBehaviour
 
         var shader = Shader.Find("Universal Render Pipeline/Lit")
                   ?? Shader.Find("Standard");
+
+        if (shader == null)
+        {
+            Debug.LogError("[MapTileManager] No suitable shader found — tiles will not render.");
+            return;
+        }
+
         materialTemplate = new Material(shader);
     }
 
@@ -125,20 +130,31 @@ public class MapTileManager : MonoBehaviour
 
     private void PositionTile(GameObject go, int tileX, int tileY)
     {
-        var (centerLat, centerLon) = TileUtils.TileCenterLatLon(tileX, tileY, zoomLevel);
+        var (centerLat, centerLon, width, height) = GetTileData(tileX, tileY);
 
         Vector3 offset = GeoUtils.GpsToUnityOffset(
             gameManager.SmoothedLatitude, gameManager.SmoothedLongitude,
             centerLat, centerLon);
 
-        float width  = TileUtils.TileWidthMetres(centerLat, zoomLevel);
-        float height = TileUtils.TileHeightMetres(tileY, zoomLevel);
-
-        // Flat mesh sits in the XZ plane at Y=0.
         go.transform.position   = new Vector3(offset.x, 0f, offset.z);
-        go.transform.rotation   = Quaternion.identity;
         go.transform.localScale = new Vector3(width, 1f, height);
         go.SetActive(true);
+    }
+
+    // Tile center, width, and height are constant for a given (x, y, zoom) —
+    // cache them so PositionTile doesn't recompute every frame.
+    private (double lat, double lon, float w, float h) GetTileData(int tileX, int tileY)
+    {
+        var key = (tileX, tileY);
+        if (!tileDataCache.TryGetValue(key, out var data))
+        {
+            var (lat, lon) = TileUtils.TileCenterLatLon(tileX, tileY, zoomLevel);
+            float w = TileUtils.TileWidthMetres(lat, zoomLevel);
+            float h = TileUtils.TileHeightMetres(tileY, zoomLevel);
+            data = (lat, lon, w, h);
+            tileDataCache[key] = data;
+        }
+        return data;
     }
 
     // -------------------------------------------------------------------------
@@ -147,10 +163,14 @@ public class MapTileManager : MonoBehaviour
 
     private void ApplyTileTexture(GameObject go, int tileX, int tileY)
     {
-        string resourcePath = $"Tiles/{zoomLevel}/{tileX}/{tileY}";
-        var    tex          = Resources.Load<Texture2D>(resourcePath);
+        var key = (tileX, tileY);
+        if (!textureCache.TryGetValue(key, out var tex))
+        {
+            tex = Resources.Load<Texture2D>($"Tiles/{zoomLevel}/{tileX}/{tileY}");
+            if (tex != null)
+                textureCache[key] = tex;
+        }
 
-        // renderer.material auto-instances so each tile has its own material.
         var mat = go.GetComponent<MeshRenderer>().material;
 
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
@@ -158,16 +178,13 @@ public class MapTileManager : MonoBehaviour
 
         if (tex != null)
         {
-            // Unity imports PNGs with Y=0 at the bottom (OpenGL convention).
-            // OSM image row 0 (top/North) lands at UV.v=1, not v=0.
-            // Mesh UV has v=0 at North → must flip V so North samples v=1 in texture.
             SetTexture(mat, tex, flipV: true);
         }
         else
         {
             mat.color = Color.grey;
             if (loggedMissing.Add((tileX, tileY)))
-                Debug.LogWarning($"[MapTileManager] Missing: Resources/{resourcePath}.png");
+                Debug.LogWarning($"[MapTileManager] Missing: Resources/Tiles/{zoomLevel}/{tileX}/{tileY}.png");
         }
     }
 
@@ -196,6 +213,7 @@ public class MapTileManager : MonoBehaviour
     {
         var go = new GameObject("MapTile");
         go.transform.SetParent(transform);
+        go.transform.rotation = Quaternion.identity;
 
         go.AddComponent<MeshFilter>().sharedMesh = GetTileMesh();
 

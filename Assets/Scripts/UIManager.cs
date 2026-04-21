@@ -9,10 +9,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text poiDistanceText;
 
     [Header("Dependencies")]
-    [SerializeField] private GameManager   gameManager;
-    [SerializeField] private POIController poiController;
+    [SerializeField] private GameManager gameManager;
 
-    [Header("POI Reference (must match POIController values)")]
+    [Header("POI Reference")]
     [SerializeField] private double poiLatitude  = 54.345_000;
     [SerializeField] private double poiLongitude = 10.132_141;
 
@@ -20,9 +19,6 @@ public class UIManager : MonoBehaviour
     {
         if (gameManager == null)
             gameManager = GameManager.Instance;
-
-        if (poiController == null)
-            poiController = FindFirstObjectByType<POIController>();
     }
 
     private void Update()
