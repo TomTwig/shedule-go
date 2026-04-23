@@ -182,7 +182,7 @@ public class MapTileManager : MonoBehaviour
         }
         else
         {
-            mat.color = Color.grey;
+            SetTexture(mat, fallbackTexture, flipV: false);
             if (loggedMissing.Add((tileX, tileY)))
                 Debug.LogWarning($"[MapTileManager] Missing: Resources/Tiles/{zoomLevel}/{tileX}/{tileY}.png");
         }
