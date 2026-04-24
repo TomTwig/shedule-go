@@ -1,15 +1,17 @@
 using UnityEngine;
 
 /// <summary>
-/// A GPS-positioned interactable object. Tracks its real-world distance to the
-/// player every frame so PlayerRangeIndicator can check proximity without doing
-/// its own GPS math.
+/// A test interactable placed at a fixed world-space offset from the player.
+/// Because the player is always at world origin, the offset is location-independent —
+/// the object appears at the same relative position regardless of GPS coordinates.
 /// </summary>
 public class ProximityTarget : MonoBehaviour
 {
-    [Header("GPS Position")]
-    [SerializeField] private double targetLatitude  = 54.3439;
-    [SerializeField] private double targetLongitude = 10.1321;
+    [Header("Offset from Player (metres)")]
+    [Tooltip("East(+)/West(-) offset in metres from the player.")]
+    [SerializeField] private float offsetX = 40f;
+    [Tooltip("North(+)/South(-) offset in metres from the player.")]
+    [SerializeField] private float offsetZ = 30f;
 
     [Header("Visual")]
     [SerializeField] private float displayScale = 25f;
@@ -17,12 +19,8 @@ public class ProximityTarget : MonoBehaviour
 
     public float DistanceToPlayer { get; private set; }
 
-    private GameManager gameManager;
-
     private void Start()
     {
-        gameManager = GameManager.Instance;
-
         var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.name = "TargetSphere";
         sphere.transform.SetParent(transform);
@@ -35,26 +33,13 @@ public class ProximityTarget : MonoBehaviour
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", markerColor);
         if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     markerColor);
         mr.material = mat;
+
+        DistanceToPlayer = Mathf.Sqrt(offsetX * offsetX + offsetZ * offsetZ);
     }
 
     private void Update()
     {
-        if (gameManager == null || !gameManager.IsLocationReady)
-        {
-            // Not ready — park 80 m east of origin so it's visible during startup.
-            transform.position = new Vector3(80f, 0f, 0f);
-            DistanceToPlayer   = 80f;
-            return;
-        }
-
-        Vector3 offset = GeoUtils.GpsToUnityOffset(
-            gameManager.SmoothedLatitude,  gameManager.SmoothedLongitude,
-            targetLatitude,                targetLongitude);
-
-        transform.position = new Vector3(offset.x, 0f, offset.z);
-
-        DistanceToPlayer = GeoUtils.DistanceMetres(
-            gameManager.PlayerLatitude,  gameManager.PlayerLongitude,
-            targetLatitude,              targetLongitude);
+        transform.position = new Vector3(offsetX, 0f, offsetZ);
+        DistanceToPlayer   = Mathf.Sqrt(offsetX * offsetX + offsetZ * offsetZ);
     }
 }
