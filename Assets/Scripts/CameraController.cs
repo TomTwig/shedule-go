@@ -33,6 +33,7 @@ public class CameraController : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoAttach()
     {
+        if (FindFirstObjectByType<GameManager>() == null) return;
         var mainCam = Camera.main;
         if (mainCam == null || mainCam.GetComponent<CameraController>() != null) return;
         mainCam.gameObject.AddComponent<CameraController>();

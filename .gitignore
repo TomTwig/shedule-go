@@ -17,10 +17,12 @@ androidProject/
 # Build outputs
 [Bb]uild/
 [Bb]uilds/
+dist/
 *.apk
 *.aab
 *.unitypackage
 *.unityproj
+*_BurstDebugInformation_DoNotShip/
 
 # Crash / profiler artefacts
 sysroot/

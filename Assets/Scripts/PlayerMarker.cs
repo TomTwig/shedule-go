@@ -13,6 +13,7 @@ public class PlayerMarker : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoCreate()
     {
+        if (FindFirstObjectByType<GameManager>() == null) return;
         if (FindFirstObjectByType<PlayerMarker>() != null) return;
         var go = new GameObject("PlayerMarker");
         go.AddComponent<PlayerMarker>();
