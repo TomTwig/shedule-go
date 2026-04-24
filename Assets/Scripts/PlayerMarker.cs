@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class PlayerMarker : MonoBehaviour
 {
-    [SerializeField] private float markerSize  = 30f;
+    [SerializeField] private float markerSize = 30f;
     [SerializeField] private Color markerColor = new Color(1f, 0.15f, 0.15f); // red
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -27,13 +27,13 @@ public class PlayerMarker : MonoBehaviour
         sphere.name = "PlayerSphere";
         sphere.transform.SetParent(transform);
         sphere.transform.localPosition = new Vector3(0f, 5f, 0f);
-        sphere.transform.localScale    = Vector3.one * markerSize;
+        sphere.transform.localScale = Vector3.one * markerSize;
         Destroy(sphere.GetComponent<SphereCollider>());
 
-        var mr  = sphere.GetComponent<MeshRenderer>();
+        var mr = sphere.GetComponent<MeshRenderer>();
         var mat = new Material(mr.sharedMaterial);
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", markerColor);
-        if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     markerColor);
+        if (mat.HasProperty("_Color")) mat.SetColor("_Color", markerColor);
         mr.material = mat;
     }
 }

@@ -42,6 +42,8 @@ public class CountdownActivator : MonoBehaviour
             UpdateText();
 
             ActivateObject();
+
+            gameObject.SetActive(false);
         }
         else
         {

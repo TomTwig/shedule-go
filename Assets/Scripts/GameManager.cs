@@ -11,16 +11,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private LocationManager locationManager;
 
     // Cached values — other scripts poll these instead of reading Input.location.
-    public double PlayerLatitude   { get; private set; }
-    public double PlayerLongitude  { get; private set; }
+    public double PlayerLatitude { get; private set; }
+    public double PlayerLongitude { get; private set; }
 
     // Smoothed values for visual rendering — interpolate toward actual GPS each frame.
-    public double SmoothedLatitude  { get; private set; }
+    public double SmoothedLatitude { get; private set; }
     public double SmoothedLongitude { get; private set; }
 
     [SerializeField] private float smoothSpeed = 5f;
 
-    public bool   IsLocationReady => locationManager != null && locationManager.IsReady;
+    public bool IsLocationReady => locationManager != null && locationManager.IsReady;
 
     private bool smoothedInitialized;
 
@@ -36,11 +36,13 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
 
-        Screen.autorotateToPortrait           = true;
+        Screen.autorotateToPortrait = true;
         Screen.autorotateToPortraitUpsideDown = false;
-        Screen.autorotateToLandscapeLeft      = false;
-        Screen.autorotateToLandscapeRight     = false;
-        Screen.orientation                    = ScreenOrientation.Portrait;
+        Screen.autorotateToLandscapeLeft = false;
+        Screen.autorotateToLandscapeRight = false;
+        Screen.orientation = ScreenOrientation.Portrait;
+
+
     }
 
     private void Start()
@@ -57,19 +59,19 @@ public class GameManager : MonoBehaviour
         if (locationManager == null || !locationManager.IsReady)
             return;
 
-        PlayerLatitude  = locationManager.CurrentLatitude;
+        PlayerLatitude = locationManager.CurrentLatitude;
         PlayerLongitude = locationManager.CurrentLongitude;
 
         if (!smoothedInitialized)
         {
-            SmoothedLatitude    = PlayerLatitude;
-            SmoothedLongitude   = PlayerLongitude;
+            SmoothedLatitude = PlayerLatitude;
+            SmoothedLongitude = PlayerLongitude;
             smoothedInitialized = true;
         }
         else
         {
             float t = 1f - Mathf.Exp(-smoothSpeed * Time.deltaTime);
-            SmoothedLatitude  += (PlayerLatitude  - SmoothedLatitude)  * t;
+            SmoothedLatitude += (PlayerLatitude - SmoothedLatitude) * t;
             SmoothedLongitude += (PlayerLongitude - SmoothedLongitude) * t;
         }
     }
