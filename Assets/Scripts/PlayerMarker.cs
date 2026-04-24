@@ -10,15 +10,6 @@ public class PlayerMarker : MonoBehaviour
     [SerializeField] private float markerSize = 30f;
     [SerializeField] private Color markerColor = new Color(1f, 0.15f, 0.15f); // red
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AutoCreate()
-    {
-        if (FindFirstObjectByType<GameManager>() == null) return;
-        if (FindFirstObjectByType<PlayerMarker>() != null) return;
-        var go = new GameObject("PlayerMarker");
-        go.AddComponent<PlayerMarker>();
-    }
-
     private void Start()
     {
         transform.position = Vector3.zero;
