@@ -56,6 +56,18 @@ public class GameManager : MonoBehaviour
         var mainCam = Camera.main;
         if (mainCam != null && mainCam.GetComponent<CameraController>() == null)
             mainCam.gameObject.AddComponent<CameraController>();
+
+        if (FindFirstObjectByType<PlayerRangeIndicator>() == null)
+        {
+            var go = new GameObject("PlayerRangeIndicator");
+            go.AddComponent<PlayerRangeIndicator>();
+        }
+
+        if (FindFirstObjectByType<ProximityTarget>() == null)
+        {
+            var go = new GameObject("TestProximityTarget");
+            go.AddComponent<ProximityTarget>();
+        }
     }
 
     private void Start()
