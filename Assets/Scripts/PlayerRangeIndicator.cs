@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 /// <summary>
 /// Draws a visible range ring around the player and shows/hides the
@@ -11,30 +12,34 @@ using TMPro;
 public class PlayerRangeIndicator : MonoBehaviour
 {
     [SerializeField] public float rangeMetres = 100f;
-    [SerializeField] private float rangeStep  = 10f;
-    [SerializeField] private int   segments   = 64;
-    [SerializeField] private Color ringColor  = new Color(1f, 0.85f, 0f, 1f);
-    [SerializeField] private float lineWidth  = 15f;
+    [SerializeField] private float rangeStep = 10f;
+    [SerializeField] private int segments = 64;
+    [SerializeField] private Color ringColor = new Color(1f, 0.85f, 0f, 1f);
+    [SerializeField] private float lineWidth = 15f;
 
     [Header("UI References")]
     [Tooltip("Root GameObject of the sell button — will be shown/hidden.")]
-    [SerializeField] private GameObject      sellButtonRoot;
+    [SerializeField] private GameObject sellButtonRoot;
     [Tooltip("Text field that displays the current radius value.")]
     [SerializeField] private TextMeshProUGUI rangeLabel;
     [Tooltip("Button that decreases the radius.")]
-    [SerializeField] private Button          minusButton;
+    [SerializeField] private Button minusButton;
     [Tooltip("Button that increases the radius.")]
-    [SerializeField] private Button          plusButton;
+    [SerializeField] private Button plusButton;
 
-    private LineRenderer      ring;
-    private float             lastRange;
+    private LineRenderer ring;
+    private float lastRange;
     private ProximityTarget[] targets;
+
+    private Boolean hasSold;
 
     private void Start()
     {
         BuildRing();
 
-        targets   = FindObjectsByType<ProximityTarget>(FindObjectsSortMode.None);
+        hasSold = false;
+
+        targets = FindObjectsByType<ProximityTarget>(FindObjectsSortMode.None);
         lastRange = rangeMetres;
 
         if (sellButtonRoot != null) sellButtonRoot.SetActive(false);
@@ -70,26 +75,30 @@ public class PlayerRangeIndicator : MonoBehaviour
             }
         }
 
-        if (sellButtonRoot != null && sellButtonRoot.activeSelf != inRange)
+        if (sellButtonRoot != null && sellButtonRoot.activeSelf != inRange && !hasSold)
+        {
             sellButtonRoot.SetActive(inRange);
+        }
+
+
     }
 
     private void BuildRing()
     {
         ring = gameObject.AddComponent<LineRenderer>();
-        ring.loop              = true;
-        ring.widthMultiplier   = lineWidth;
-        ring.useWorldSpace     = false;
+        ring.loop = true;
+        ring.widthMultiplier = lineWidth;
+        ring.useWorldSpace = false;
         ring.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        ring.receiveShadows    = false;
-        ring.sortingOrder      = 10;
+        ring.receiveShadows = false;
+        ring.sortingOrder = 10;
 
         var shader = Shader.Find("Universal Render Pipeline/Unlit")
                   ?? Shader.Find("Sprites/Default")
                   ?? Shader.Find("Unlit/Color");
         var mat = new Material(shader);
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", ringColor);
-        else                               mat.color = ringColor;
+        else mat.color = ringColor;
         ring.material = mat;
 
         UpdateRingGeometry();
@@ -112,5 +121,11 @@ public class PlayerRangeIndicator : MonoBehaviour
     {
         if (rangeLabel != null)
             rangeLabel.text = $"Radius\n{rangeMetres:F0} m";
+    }
+
+    public void sellHarvest()
+    {
+        hasSold = true;
+        sellButtonRoot.SetActive(false);
     }
 }

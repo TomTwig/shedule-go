@@ -9,13 +9,13 @@ public class ProximityTarget : MonoBehaviour
 {
     [Header("Offset from Player (metres)")]
     [Tooltip("East(+)/West(-) offset in metres from the player.")]
-    [SerializeField] private float offsetX = 40f;
+    [SerializeField] private float offsetX = 60f;
     [Tooltip("North(+)/South(-) offset in metres from the player.")]
-    [SerializeField] private float offsetZ = 30f;
+    [SerializeField] private float offsetZ = 50f;
 
     [Header("Visual")]
     [SerializeField] private float displayScale = 25f;
-    [SerializeField] private Color markerColor  = new Color(0.1f, 0.85f, 0.1f);
+    [SerializeField] private Color markerColor = new Color(0.1f, 0.85f, 0.1f);
 
     public float DistanceToPlayer { get; private set; }
 
@@ -25,13 +25,13 @@ public class ProximityTarget : MonoBehaviour
         sphere.name = "TargetSphere";
         sphere.transform.SetParent(transform);
         sphere.transform.localPosition = new Vector3(0f, 5f, 0f);
-        sphere.transform.localScale    = Vector3.one * displayScale;
+        sphere.transform.localScale = Vector3.one * displayScale;
         Destroy(sphere.GetComponent<SphereCollider>());
 
-        var mr  = sphere.GetComponent<MeshRenderer>();
+        var mr = sphere.GetComponent<MeshRenderer>();
         var mat = new Material(mr.sharedMaterial);
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", markerColor);
-        if (mat.HasProperty("_Color"))     mat.SetColor("_Color",     markerColor);
+        if (mat.HasProperty("_Color")) mat.SetColor("_Color", markerColor);
         mr.material = mat;
 
         DistanceToPlayer = Mathf.Sqrt(offsetX * offsetX + offsetZ * offsetZ);
@@ -40,6 +40,6 @@ public class ProximityTarget : MonoBehaviour
     private void Update()
     {
         transform.position = new Vector3(offsetX, 0f, offsetZ);
-        DistanceToPlayer   = Mathf.Sqrt(offsetX * offsetX + offsetZ * offsetZ);
+        DistanceToPlayer = Mathf.Sqrt(offsetX * offsetX + offsetZ * offsetZ);
     }
 }
