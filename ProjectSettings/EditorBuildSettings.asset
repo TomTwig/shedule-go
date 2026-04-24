@@ -5,11 +5,17 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/Main.unity
+    path: Assets/Scenes/1 Pflanze anbauen.unity
+    guid: 8ff7420092666144e8870c4728e1cf5b
+  - enabled: 1
+    path: Assets/Scenes/2 Pflanze wachsen Timer.unity
+    guid: 2f764a88b1205794d971fc9ab95fc6ee
+  - enabled: 1
+    path: Assets/Scenes/3 Pflanze ernten.unity
+    guid: 6933c5675b527b34abf8a74dd2cd1a01
+  - enabled: 1
+    path: Assets/Scenes/4 GPS Dealer.unity
     guid: db81a3fc95bbcae4192b556416547c3a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
