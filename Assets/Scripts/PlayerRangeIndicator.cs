@@ -14,7 +14,7 @@ public class PlayerRangeIndicator : MonoBehaviour
     [SerializeField] private float rangeStep  = 10f;
     [SerializeField] private int   segments   = 64;
     [SerializeField] private Color ringColor  = new Color(1f, 0.85f, 0f, 1f);
-    [SerializeField] private float lineWidth  = 6f;
+    [SerializeField] private float lineWidth  = 15f;
 
     [Header("UI References")]
     [Tooltip("Root GameObject of the sell button — will be shown/hidden.")]
@@ -82,6 +82,7 @@ public class PlayerRangeIndicator : MonoBehaviour
         ring.useWorldSpace     = false;
         ring.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         ring.receiveShadows    = false;
+        ring.sortingOrder      = 10;
 
         var shader = Shader.Find("Universal Render Pipeline/Unlit")
                   ?? Shader.Find("Sprites/Default")
